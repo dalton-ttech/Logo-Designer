@@ -1,8 +1,38 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { GenerationParams, LogoType, PromptResponse } from '../types';
 
+// Robust API Key Retrieval
+export const getApiKey = (): string => {
+  // 1. Try standard process.env (Priority as per guidelines and AI Studio injection)
+  try {
+    if (typeof process !== 'undefined' && (process.env as any)?.API_KEY) {
+      return (process.env as any).API_KEY;
+    }
+  } catch (e) {
+    // process is not defined
+  }
+
+  // 2. Try Vite specific env var (Standard for Vercel + Vite)
+  // Casting import.meta to any to avoid TS errors if vite types are missing
+  const meta = import.meta as any;
+  if (typeof meta !== 'undefined' && meta.env?.VITE_API_KEY) {
+    return meta.env.VITE_API_KEY;
+  }
+
+  // 3. Try Local Storage (User manual entry fallback)
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('gemini_api_key') || '';
+  }
+
+  return '';
+};
+
 // Initialize the API client
-const getClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getClient = () => {
+  const apiKey = getApiKey();
+  // Pass a placeholder if empty to prevent immediate crash, let the API call fail gracefully with 403
+  return new GoogleGenAI({ apiKey: apiKey || 'MISSING_KEY' });
+};
 
 /**
  * Step 1: "Art Director" - Converts user inputs into a structured Prompt
@@ -170,9 +200,6 @@ export const generateLogoImage = async (prompt: string): Promise<string> => {
 };
 
 // Helper to identify errors that justify trying a fallback model
-// 429 = Quota Exceeded
-// 404 = Model Not Found (e.g., if user doesn't have access to Pro/Imagen)
-// 400 + "billed users" = Billing requirement (treat as exhaustion)
 const isRetryableError = (error: any): boolean => {
   const msg = (error.message || "").toLowerCase();
   return (
@@ -183,7 +210,6 @@ const isRetryableError = (error: any): boolean => {
     msg.includes('404') ||
     error.status === 404 ||
     msg.includes('not_found') ||
-    // Billing related (often 400 Invalid Argument)
     msg.includes('billed users') ||
     msg.includes('billing')
   );

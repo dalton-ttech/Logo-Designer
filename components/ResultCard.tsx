@@ -34,7 +34,10 @@ export const ResultCard: React.FC<Props> = ({ loading, result, loadingStep }) =>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 w-full aspect-square md:aspect-auto md:h-[600px] relative rounded-[32px] overflow-hidden glass-card border border-white/10 shadow-2xl flex items-center justify-center group"
+      className={`
+        mt-8 w-full relative rounded-[32px] overflow-hidden glass-card border border-white/10 shadow-2xl group
+        ${loading ? 'aspect-square md:aspect-auto md:h-[600px] flex items-center justify-center' : 'h-auto md:h-[600px]'}
+      `}
     >
       <AnimatePresence mode="wait">
         {loading ? (
@@ -67,23 +70,33 @@ export const ResultCard: React.FC<Props> = ({ loading, result, loadingStep }) =>
         ) : result ? (
           <motion.div
             key="result"
-            className="relative w-full h-full"
+            className="relative w-full h-full flex flex-col md:block"
             initial={{ filter: 'blur(20px)', opacity: 0 }}
             animate={{ filter: 'blur(0px)', opacity: 1 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
           >
-            <img 
-              src={result.imageUrl} 
-              alt="Generated Logo" 
-              className="w-full h-full object-cover"
-            />
+            {/* Image Section */}
+            <div className="w-full relative flex-1 md:h-full">
+              <img 
+                src={result.imageUrl} 
+                alt="Generated Logo" 
+                className="w-full h-auto md:h-full object-cover rounded-t-[32px] md:rounded-[32px]"
+              />
+            </div>
             
-            {/* Analysis Tray - Dark Mode */}
+            {/* Analysis Tray - Stacked on Mobile, Overlay on Desktop */}
             <motion.div 
-              initial={{ y: 100 }}
-              animate={{ y: 0 }}
-              transition={{ delay: 1, type: "spring" }}
-              className="absolute bottom-6 left-6 right-6 p-6 glass-card bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, type: "spring" }}
+              className="
+                relative md:absolute md:bottom-6 md:left-6 md:right-6 
+                p-5 md:p-6 
+                bg-black/60 md:glass-card md:backdrop-blur-xl 
+                border-t md:border border-white/10 
+                rounded-b-[32px] md:rounded-2xl
+                z-10
+              "
             >
               <div className="flex items-start gap-4">
                 <div className="w-1 h-12 bg-gradient-to-b from-purple-400 to-blue-500 rounded-full shrink-0" />

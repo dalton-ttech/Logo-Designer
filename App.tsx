@@ -65,19 +65,19 @@ export default function App() {
     } catch (error: any) {
       console.error("Generation Error:", error);
       
-      const isForbidden = error.message?.includes('403') || error.status === 403 || error.message?.includes('PERMISSION_DENIED');
+      const isForbidden = error.message?.includes('403') || error.status === 403 || error.message?.includes('PERMISSION_DENIED') || error.message?.includes('API key not valid');
       const isQuotaExceeded = error.message?.includes('429') || error.status === 429 || error.message?.includes('RESOURCE_EXHAUSTED');
       const isAllImagesExhausted = error.message === "ALL_IMAGE_MODELS_EXHAUSTED";
 
       if (isForbidden) {
-        const confirmRetry = confirm("权限不足 (403 Permission Denied)。\n\n这通常是因为当前选择的 API Key 没有访问 Gemini 3 Pro 模型的权限，或者该项目未启用计费。\n\n是否重新选择 API Key？");
+        const confirmRetry = confirm("API Key 无效或权限不足 (403/400)。\n\n请检查您输入的 API Key 是否正确，或是否已在 Google Cloud Console 中为该项目启用了计费。\n\n点击'确定'重新输入 Key。");
         if (confirmRetry) {
+          // Clear invalid key and reload to trigger selector
+          localStorage.removeItem('gemini_api_key');
           if ((window as any).aistudio) {
-            await (window as any).aistudio.openSelectKey();
-            // Reset loading state but don't clear inputs so user can try again immediately
-            setLoading(false);
-            setLoadingStep("");
-            return;
+             await (window as any).aistudio.openSelectKey();
+          } else {
+             window.location.reload();
           }
         }
       } else if (isAllImagesExhausted) {
@@ -98,13 +98,13 @@ export default function App() {
       <Header />
       <ApiKeySelector />
 
-      <main className="pt-32 px-4 md:px-0 max-w-[800px] mx-auto flex flex-col items-center">
+      <main className="pt-24 md:pt-32 px-4 md:px-0 max-w-[800px] mx-auto flex flex-col items-center">
         
         {/* Main Interface Stack */}
         <div className="w-full space-y-4">
           
           {/* Module 1: Brand & Genes */}
-          <div className="glass-card p-8">
+          <div className="glass-card p-6 md:p-8">
             <div className="space-y-6">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">品牌名称 (Brand Identity)</label>
@@ -117,7 +117,7 @@ export default function App() {
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
                     placeholder="输入品牌名称"
-                    className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-xl text-xl font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:bg-black/40 transition-all"
+                    className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-xl text-lg md:text-xl font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:bg-black/40 transition-all"
                   />
                 </div>
               </div>
@@ -141,7 +141,7 @@ export default function App() {
           </div>
 
           {/* Module 2: Type Selector */}
-          <div className="glass-card p-6">
+          <div className="glass-card p-4 md:p-6">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-4 block">Logo 类型 (Archetype)</label>
             <TypeSelector selected={logoType} onChange={setLogoType} />
           </div>
@@ -150,7 +150,7 @@ export default function App() {
           <div className="glass-card overflow-hidden transition-all duration-500">
             <button 
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between p-6 text-slate-400 hover:text-white transition-colors"
+              className="w-full flex items-center justify-between p-4 md:p-6 text-slate-400 hover:text-white transition-colors"
             >
               <span className="text-sm font-medium flex items-center gap-2">
                 <Tag size={16} /> 高级设置 (Advanced)
@@ -166,7 +166,7 @@ export default function App() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="px-6 pb-8 space-y-4"
+                  className="px-4 md:px-6 pb-6 md:pb-8 space-y-4"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
