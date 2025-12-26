@@ -5,18 +5,26 @@ import { GenerationParams, LogoType, PromptResponse } from '../types';
 export const getApiKey = (): string => {
   // 1. Try standard process.env (Priority as per guidelines and AI Studio injection)
   try {
-    if (typeof process !== 'undefined' && (process.env as any)?.API_KEY) {
-      return (process.env as any).API_KEY;
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env?.API_KEY) {
+      // @ts-ignore
+      return process.env.API_KEY;
     }
   } catch (e) {
     // process is not defined
   }
 
   // 2. Try Vite specific env var (Standard for Vercel + Vite)
-  // Casting import.meta to any to avoid TS errors if vite types are missing
-  const meta = import.meta as any;
-  if (typeof meta !== 'undefined' && meta.env?.VITE_API_KEY) {
-    return meta.env.VITE_API_KEY;
+  // CRITICAL: We must access import.meta.env.VITE_API_KEY DIRECTLY.
+  // Vite replaces this string statically at build time. Assigning 'import.meta' to a variable first breaks this replacement.
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_API_KEY;
+    }
+  } catch (e) {
+    // import.meta is not defined
   }
 
   // 3. Try Local Storage (User manual entry fallback)
