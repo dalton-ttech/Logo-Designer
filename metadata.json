@@ -1,0 +1,5 @@
+{
+  "name": "Turing Studio AI",
+  "description": "A Linear-style, ethereal AI logo generator using Gemini 3 Pro. Features a glassmorphism UI, mesh gradients, and a two-step AI generation process (Art Director Text -> Image Generation).",
+  "requestFramePermissions": []
+}
